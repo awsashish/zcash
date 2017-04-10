@@ -1,4 +1,4 @@
-DIST_SUBDIRS = secp256k1 univalue
+DIST_SUBDIRS = secp256k1 univalue libsnark
 AM_LDFLAGS = $(PTHREAD_CFLAGS) $(LIBTOOL_LDFLAGS)
 
 
@@ -22,6 +22,7 @@ BITCOIN_INCLUDES=-I$(builddir) -I$(builddir)/obj $(BOOST_CPPFLAGS) $(LEVELDB_CPP
 
 BITCOIN_INCLUDES += -I$(srcdir)/secp256k1/include
 BITCOIN_INCLUDES += -I$(srcdir)/univalue/include
+BITCOIN_INCLUDES += -I$(srcdir)/libsnark
 
 LIBBITCOIN_SERVER=libbitcoin_server.a
 LIBBITCOIN_WALLET=libbitcoin_wallet.a
@@ -32,6 +33,7 @@ LIBBITCOIN_CRYPTO=crypto/libbitcoin_crypto.a
 LIBSECP256K1=secp256k1/libsecp256k1.la
 LIBUNIVALUE=univalue/libunivalue.la
 LIBZCASH=libzcash.a
+LIBSNARK=libsnark.a
 
 $(LIBSECP256K1): $(wildcard secp256k1/src/*) $(wildcard secp256k1/include/*)
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
@@ -47,6 +49,7 @@ EXTRA_LIBRARIES = \
   libbitcoin_common.a \
   libbitcoin_server.a \
   libbitcoin_cli.a \
+  libsnark.a \
   libzcash.a
 if ENABLE_WALLET
 BITCOIN_INCLUDES += $(BDB_CPPFLAGS)
@@ -379,6 +382,7 @@ zcashd_LDADD = \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBZCASH) \
+  $(LIBSNARK) \
   $(LIBLEVELDB) \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
@@ -399,7 +403,6 @@ zcashd_LDADD += \
   $(MINIUPNPC_LIBS) \
   $(EVENT_PTHREADS_LIBS) \
   $(EVENT_LIBS) \
-  $(LIBZCASH) \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBZCASH_LIBS)
 
@@ -421,6 +424,7 @@ zcash_cli_LDADD = \
   $(CRYPTO_LIBS) \
   $(EVENT_LIBS) \
   $(LIBZCASH) \
+  $(LIBSNARK) \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBZCASH_LIBS)
 #
@@ -441,6 +445,7 @@ zcash_tx_LDADD = \
   $(LIBBITCOIN_UTIL) \
   $(LIBSECP256K1) \
   $(LIBZCASH) \
+  $(LIBSNARK) \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBZCASH_LIBS)
 
@@ -471,6 +476,18 @@ libzcash_a_CXXFLAGS = $(HARDENED_CXXFLAGS) -fwrapv -fno-strict-aliasing
 libzcash_a_LDFLAGS = $(HARDENED_LDFLAGS)
 
 libzcash_a_CPPFLAGS += -DMONTGOMERY_OUTPUT
+
+# libsnark
+libsnark_a_SOURCES = \
+  libsnark/algebra/curves/alt_bn128/alt_bn128_g1.cpp \
+  libsnark/algebra/curves/alt_bn128/alt_bn128_g2.cpp \
+  libsnark/algebra/curves/alt_bn128/alt_bn128_init.cpp \
+  libsnark/algebra/curves/alt_bn128/alt_bn128_pairing.cpp \
+  libsnark/algebra/curves/alt_bn128/alt_bn128_pp.cpp \
+  libsnark/common/utils.cpp \
+  libsnark/common/profiling.cpp
+
+libsnark_a_CPPFLAGS = -fPIC -O2 -march=x86-64 -DMONTGOMERY_OUTPUT -DBINARY_OUTPUT -DNO_PT_COMPRESSION=1 -DMULTICORE -DCURVE_ALT_BN128 -fopenmp -DNO_PROCPS -static -DSTATIC -I./libsnark/
 
 # zcashconsensus library #
 if BUILD_BITCOIN_LIBS
