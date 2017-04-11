@@ -1,5 +1,5 @@
 rust_packages := rust librustzcash
-zcash_packages := libsnark libgmp libsodium
+zcash_packages := libgmp libsodium
 packages := boost openssl libevent zeromq $(zcash_packages) googletest googlemock
 native_packages := native_ccache
 
